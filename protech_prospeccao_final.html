@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protech — Prospecção de Parceiros</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAQU3RTlIqjvv2HXLw4f1lSo39gaA4rI90",
+    authDomain: "protech-72836.firebaseapp.com",
+    projectId: "protech-72836",
+    storageBucket: "protech-72836.firebasestorage.app",
+    messagingSenderId: "942270092785",
+    appId: "1:942270092785:web:5a702dab74fa32f5c36050"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Expõe para o resto do app
+  window._db = db;
+  window._firestore = { doc, setDoc, getDoc, onSnapshot, collection, getDocs };
+  window._fbReady = true;
+  window.dispatchEvent(new Event('fbready'));
+</script>
+<style>
+:root{
+  --bg:#0d0f14;--s1:#13161e;--s2:#1a1e29;--s3:#222738;
+  --border:#2c3248;--accent:#e8c14e;--accent2:#4e8fe8;
+  --red:#e84e4e;--green:#4ec87a;--orange:#e8944e;
+  --text:#eef0f6;--muted:#7880a0;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--display:'Bebas Neue',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+
+header{position:relative;z-index:10;background:var(--s1);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:16px}
+.logo{background:var(--accent);color:#0d0f14;font-family:var(--display);font-size:17px;letter-spacing:3px;padding:7px 12px;border-radius:3px;line-height:1;flex-shrink:0}
+.logo small{display:block;font-size:7px;letter-spacing:4px;opacity:.7;margin-top:1px}
+.htxt h1{font-family:var(--display);font-size:clamp(15px,2.5vw,22px);letter-spacing:2px;color:var(--text)}
+.htxt p{font-size:11px;color:var(--muted);margin-top:2px;font-weight:300}
+.hright{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.hbadge{font-family:var(--mono);font-size:9px;padding:4px 10px;border-radius:20px;letter-spacing:1px}
+.hbadge.on{background:rgba(78,200,122,.12);border:1px solid rgba(78,200,122,.3);color:var(--green)}
+.hbadge.off{background:rgba(232,78,78,.12);border:1px solid rgba(232,78,78,.3);color:var(--red)}
+.hstat{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--s2);border:1px solid var(--border);padding:4px 10px;border-radius:20px}
+
+.layout{position:relative;z-index:1;display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 62px)}
+@media(max-width:750px){.layout{display:block}}
+
+.sb{background:var(--s1);border-right:1px solid var(--border);padding:16px 14px;display:flex;flex-direction:column;gap:11px;overflow-y:auto;max-height:calc(100vh - 62px)}
+.sb-title{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.field select,.field input{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;transition:border .2s;appearance:none;width:100%}
+.field select:focus,.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--muted)}
+.btn-main{background:var(--accent);color:#0d0f14;border:none;border-radius:6px;padding:10px;font-family:var(--display);font-size:14px;letter-spacing:2px;cursor:pointer;transition:opacity .2s;width:100%}
+.btn-main:hover{opacity:.85}
+.btn-main:disabled{opacity:.4;cursor:not-allowed}
+hr.div{border:none;border-top:1px solid var(--border)}
+
+.stats4{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.stat{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:7px 5px;text-align:center}
+.stat .n{font-family:var(--display);font-size:18px;letter-spacing:1px;color:var(--accent)}
+.stat .l{font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:1px;line-height:1.3}
+
+.prog-box{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.prog-title{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:8px}
+.prog-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.prog-row:last-child{margin-bottom:0}
+.prog-label{font-size:10px;color:var(--muted);width:90px;flex-shrink:0}
+.prog-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.prog-val{font-family:var(--mono);font-size:10px;color:var(--text);width:18px;text-align:right}
+
+.tip{font-size:10px;color:var(--muted);line-height:1.6;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:9px 11px}
+.sync-status{font-size:10px;font-family:var(--mono);text-align:center;padding:5px;border-radius:5px;background:var(--s2);border:1px solid var(--border);color:var(--muted)}
+.sync-status.ok{border-color:rgba(78,200,122,.3);color:var(--green)}
+.sync-status.saving{border-color:rgba(232,193,78,.3);color:var(--accent)}
+
+.main{padding:16px 20px;display:flex;flex-direction:column;overflow:hidden}
+.tabs-wrap{display:flex;gap:0;background:var(--s2);border-radius:7px;padding:3px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.tabs-wrap::-webkit-scrollbar{display:none}
+.ctab{padding:6px 12px;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;border-radius:5px;cursor:pointer;color:var(--muted);border:none;background:transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:4px;font-family:var(--font)}
+.ctab.active{background:var(--s3);color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.3)}
+.badge{background:var(--s3);color:var(--muted);font-size:9px;padding:1px 5px;border-radius:10px;font-family:var(--mono);min-width:16px;text-align:center}
+.ctab.active .badge{background:var(--border);color:var(--text)}
+
+.cards{display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding-right:3px;max-height:calc(100vh - 160px)}
+.cards::-webkit-scrollbar{width:3px}
+.cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.cc{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px;animation:fadeUp .22s ease both;transition:all .2s}
+.cc:hover{border-color:var(--s3)}
+.cc.st-contato{border-left:3px solid var(--accent2)}
+.cc.st-errado{border-left:3px solid var(--red);opacity:.7}
+.cc.st-reuniao{border-left:3px solid var(--orange)}
+.cc.st-visita{border-left:3px solid var(--green)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.cc-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.av{width:34px;height:34px;border-radius:7px;background:var(--s3);color:var(--accent2);font-family:var(--display);font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
+.cc-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.cc-seg{font-size:10px;background:rgba(78,143,232,.15);color:var(--accent2);padding:2px 6px;border-radius:3px;display:inline-block;font-family:var(--mono)}
+.star-btn{margin-left:auto;cursor:pointer;font-size:18px;color:var(--border);background:none;border:none;flex-shrink:0;transition:color .2s}
+.star-btn.on{color:#f0a500}
+
+.cc-info{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.ci{font-size:11px;color:var(--muted)}
+.ci a{color:var(--accent2);text-decoration:none}
+.ci a:hover{text-decoration:underline}
+.cc-desc{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:8px;line-height:1.5}
+
+.nota-area{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:7px 9px;font-family:var(--font);font-size:11px;color:var(--text);resize:none;outline:none;margin-bottom:6px;min-height:36px;max-height:80px;line-height:1.5;transition:border .2s}
+.nota-area:focus{border-color:var(--accent);min-height:56px}
+.nota-area::placeholder{color:var(--muted)}
+.nota-meta{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.follow-badge{background:rgba(232,148,78,.15);color:var(--orange);border:1px solid rgba(232,148,78,.3);border-radius:4px;padding:2px 7px;font-size:9px;cursor:pointer}
+.follow-badge.ok{background:rgba(78,200,122,.15);color:var(--green);border-color:rgba(78,200,122,.3)}
+
+.edit-row{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.edit-inp{background:var(--s2);border:1px solid var(--accent);border-radius:4px;padding:4px 8px;font-size:11px;color:var(--text);font-family:var(--mono);outline:none;flex:1}
+.edit-btn{background:var(--accent);color:#0d0f14;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:600}
+
+.acts{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.ba{font-size:10px;font-weight:600;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all .2s;font-family:var(--font)}
+.ba:hover{background:var(--s2)}
+.bw{border-color:#25d366;color:#4ec87a}.bw:hover{background:rgba(78,200,122,.08)}
+.be{border-color:rgba(232,193,78,.4);color:var(--accent)}.be:hover{background:rgba(232,193,78,.08)}
+.bm{border-color:rgba(78,143,232,.4);color:var(--accent2)}.bm:hover{background:rgba(78,143,232,.08)}
+.bg{border-color:rgba(160,78,232,.4);color:#c084fc}.bg:hover{background:rgba(160,78,232,.08)}
+
+.status-sel{background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:4px 7px;font-family:var(--mono);font-size:9px;color:var(--muted);cursor:pointer;outline:none;appearance:none;margin-left:auto}
+
+.empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px}
+.empty .ei{font-size:34px;margin-bottom:10px}
+.empty .et{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.loading-box{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:7px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bar{height:2px;background:var(--border);border-radius:2px;overflow:hidden;margin:12px auto;max-width:200px}
+.bar-fill{height:100%;background:var(--accent);border-radius:2px;animation:lb 1.4s ease infinite}
+@keyframes lb{0%{width:0;margin-left:0}50%{width:55%;margin-left:20%}100%{width:0;margin-left:100%}}
+.lmsg{font-size:10px;margin-top:4px;font-family:var(--mono);color:var(--muted)}
+
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.ov.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:12px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:fadeUp .2s ease}
+.mh{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s1);z-index:1}
+.mh h3{font-family:var(--display);font-size:14px;letter-spacing:1px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px}
+.mclose{background:var(--s2);border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:13px;color:var(--muted)}
+.mclose:hover{background:var(--s3)}
+.mb{padding:16px}
+.mtabs{display:flex;gap:3px;background:var(--s2);border-radius:6px;padding:3px;margin-bottom:12px}
+.mtab{flex:1;padding:6px;text-align:center;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;color:var(--muted);border:none;background:transparent;transition:all .2s;letter-spacing:.5px;text-transform:uppercase;font-family:var(--font)}
+.mtab.active{background:var(--s3);color:var(--text)}
+.msgbox{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:13px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;min-height:130px;margin-bottom:10px}
+.bcopy{width:100%;background:var(--accent);color:#0d0f14;border:none;border-radius:6px;padding:9px;font-family:var(--display);font-size:13px;letter-spacing:2px;cursor:pointer;transition:opacity .2s}
+.bcopy:hover{opacity:.85}
+.hint{font-size:10px;color:var(--muted);margin-top:7px;text-align:center;line-height:1.5;font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PROTECH<small>REGULADORA</small></div>
+  <div class="htxt">
+    <h1>PROSPECÇÃO DE PARCEIROS</h1>
+    <p>Busca com IA · Dados na nuvem · Sincronizado em tempo real</p>
+  </div>
+  <div class="hright">
+    <div class="hstat" id="hstat">0 empresas</div>
+    <div class="hbadge off" id="fb-badge">● conectando...</div>
+    <div class="hbadge on">● IA ATIVA</div>
+  </div>
+</header>
+
+<div class="layout">
+<div class="sb">
+  <div class="sb-title">🔍 Filtros de busca</div>
+  <div class="field"><label>Segmento</label>
+    <select id="seg">
+      <option value="transportadoras">Transportadoras</option>
+      <option value="seguradoras">Seguradoras</option>
+      <option value="corretoras de seguro">Corretoras de Seguro</option>
+      <option value="empresas de logística">Empresas de Logística</option>
+      <option value="gestores de frota">Gestores de Frota</option>
+      <option value="cooperativas de proteção veicular">Cooperativas de Proteção Veicular</option>
+      <option value="associações de proteção veicular">Associações de Proteção Veicular</option>
+    </select>
+  </div>
+  <div class="field"><label>Estado</label>
+    <select id="estado">
+      <option value="Brasil">Todo o Brasil</option>
+      <option value="São Paulo">São Paulo — SP</option>
+      <option value="Rio de Janeiro">Rio de Janeiro — RJ</option>
+      <option value="Minas Gerais">Minas Gerais — MG</option>
+      <option value="Paraná">Paraná — PR</option>
+      <option value="Rio Grande do Sul">Rio Grande do Sul — RS</option>
+      <option value="Santa Catarina">Santa Catarina — SC</option>
+      <option value="Bahia">Bahia — BA</option>
+      <option value="Goiás">Goiás — GO</option>
+      <option value="Mato Grosso">Mato Grosso — MT</option>
+      <option value="Pernambuco">Pernambuco — PE</option>
+      <option value="Ceará">Ceará — CE</option>
+      <option value="Amazonas">Amazonas — AM</option>
+      <option value="Pará">Pará — PA</option>
+      <option value="Maranhão">Maranhão — MA</option>
+      <option value="Rio Grande do Norte">Rio Grande do Norte — RN</option>
+    </select>
+  </div>
+  <div class="field"><label>Porte</label>
+    <select id="porte">
+      <option value="qualquer porte">Qualquer porte</option>
+      <option value="pequeno porte">Pequeno porte</option>
+      <option value="médio porte">Médio porte</option>
+      <option value="grande porte">Grande porte</option>
+    </select>
+  </div>
+  <div class="field"><label>Quantidade</label>
+    <select id="qtd">
+      <option value="10">10 empresas</option>
+      <option value="20" selected>20 empresas</option>
+      <option value="30">30 empresas</option>
+      <option value="40">40 empresas</option>
+    </select>
+  </div>
+  <div class="field"><label>Palavra-chave (opcional)</label>
+    <input type="text" id="kw" placeholder="ex: carga seca, graneis...">
+  </div>
+  <button class="btn-main" id="btn-buscar" onclick="buscar()">⚡ BUSCAR EMPRESAS</button>
+  <hr class="div">
+  <div class="stats4">
+    <div class="stat"><div class="n" id="sn-total">0</div><div class="l">total</div></div>
+    <div class="stat"><div class="n" id="sn-contato" style="color:var(--accent2)">0</div><div class="l">c/ contato</div></div>
+    <div class="stat"><div class="n" id="sn-reuniao" style="color:var(--orange)">0</div><div class="l">reuniões</div></div>
+    <div class="stat"><div class="n" id="sn-visita" style="color:var(--green)">0</div><div class="l">visitas</div></div>
+  </div>
+  <div class="prog-box" id="prog-box" style="display:none">
+    <div class="prog-title">📊 Progresso</div>
+    <div class="prog-row"><span class="prog-label">Contato feito</span><div class="prog-bar"><div class="prog-fill" id="pf-contato" style="background:var(--accent2);width:0%"></div></div><span class="prog-val" id="pv-contato">0</span></div>
+    <div class="prog-row"><span class="prog-label">Reunião agend.</span><div class="prog-bar"><div class="prog-fill" id="pf-reuniao" style="background:var(--orange);width:0%"></div></div><span class="prog-val" id="pv-reuniao">0</span></div>
+    <div class="prog-row"><span class="prog-label">Visita realiz.</span><div class="prog-bar"><div class="prog-fill" id="pf-visita" style="background:var(--green);width:0%"></div></div><span class="prog-val" id="pv-visita">0</span></div>
+    <div class="prog-row"><span class="prog-label">Cont. errado</span><div class="prog-bar"><div class="prog-fill" id="pf-errado" style="background:var(--red);width:0%"></div></div><span class="prog-val" id="pv-errado">0</span></div>
+  </div>
+  <div class="sync-status" id="sync-status">☁️ aguardando Firebase...</div>
+  <div class="tip">☁️ Dados salvos na nuvem em tempo real. Acesse de qualquer dispositivo!</div>
+</div>
+
+<div class="main">
+  <div class="tabs-wrap">
+    <button class="ctab active" onclick="tab('todos',this)">Todos <span class="badge" id="tb-todos">0</span></button>
+    <button class="ctab" onclick="tab('contato',this)">✅ Contato feito <span class="badge" id="tb-contato">0</span></button>
+    <button class="ctab" onclick="tab('errado',this)">❌ Cont. errado <span class="badge" id="tb-errado">0</span></button>
+    <button class="ctab" onclick="tab('reuniao',this)">📅 Reunião <span class="badge" id="tb-reuniao">0</span></button>
+    <button class="ctab" onclick="tab('visita',this)">🤝 Visita <span class="badge" id="tb-visita">0</span></button>
+    <button class="ctab" onclick="tab('salvas',this)">⭐ Salvas <span class="badge" id="tb-salvas">0</span></button>
+  </div>
+  <div id="tab-todos">
+    <div class="empty" id="empty-state"><div class="ei">🏢</div><div class="et">Nenhuma busca realizada</div>Selecione o segmento e clique em Buscar.</div>
+    <div id="loading-state" style="display:none" class="loading-box">
+      <div><span class="spinner"></span> Buscando empresas com IA...</div>
+      <div class="bar"><div class="bar-fill"></div></div>
+      <div class="lmsg" id="lmsg">Pesquisando no mercado brasileiro...</div>
+    </div>
+    <div class="cards" id="cards-todos" style="display:none"></div>
+  </div>
+  <div id="tab-contato" style="display:none"><div class="cards" id="cards-contato"></div></div>
+  <div id="tab-errado" style="display:none"><div class="cards" id="cards-errado"></div></div>
+  <div id="tab-reuniao" style="display:none"><div class="cards" id="cards-reuniao"></div></div>
+  <div id="tab-visita" style="display:none"><div class="cards" id="cards-visita"></div></div>
+  <div id="tab-salvas" style="display:none"><div class="cards" id="cards-salvas"></div></div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="ov" id="ov">
+  <div class="modal">
+    <div class="mh"><h3 id="mtit">Mensagens</h3><button class="mclose" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="mtabs">
+        <button class="mtab active" onclick="smsg('wpp',this)">📱 WhatsApp</button>
+        <button class="mtab" onclick="smsg('email',this)">✉️ E-mail</button>
+        <button class="mtab" onclick="smsg('visita',this)">🤝 Visita</button>
+      </div>
+      <div id="ma"><div class="loading-box"><span class="spinner"></span> Gerando...</div></div>
+      <button class="bcopy" onclick="copiar()">📋 COPIAR MENSAGEM</button>
+      <div class="hint">Verifique os dados no Google Maps antes de entrar em contato.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = "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";
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+let results=[], saved=[], statuses={}, notas={}, ultimoContato={}, followUp={};
+let curEmp=null, msgType='wpp', msgs={wpp:'',email:'',visita:''}, curTab='todos';
+let db=null, fs=null, syncTimer=null;
+
+const loadMsgs=["Pesquisando no mercado brasileiro...","Identificando empresas reais...","Coletando dados de contato...","Quase pronto..."];
+
+// ===== FIREBASE =====
+function initFirebase() {
+  if(window._fbReady) {
+    db = window._db;
+    fs = window._firestore;
+    document.getElementById('fb-badge').textContent = '● Firebase OK';
+    document.getElementById('fb-badge').className = 'hbadge on';
+    document.getElementById('sync-status').textContent = '☁️ Conectado à nuvem';
+    document.getElementById('sync-status').className = 'sync-status ok';
+    carregarDadosFirebase();
+  } else {
+    window.addEventListener('fbready', initFirebase);
+  }
+}
+
+async function carregarDadosFirebase() {
+  try {
+    const snap = await fs.getDoc(fs.doc(db, 'prospeccao', 'dados'));
+    if(snap.exists()) {
+      const d = snap.data();
+      if(d.results) results = d.results;
+      if(d.saved) saved = d.saved;
+      if(d.statuses) statuses = d.statuses;
+      if(d.notas) notas = d.notas;
+      if(d.ultimoContato) ultimoContato = d.ultimoContato;
+      if(d.followUp) followUp = d.followUp;
+      if(results.length) {
+        document.getElementById('empty-state').style.display='none';
+        const cr=document.getElementById('cards-todos');
+        cr.style.display='flex'; cr.innerHTML='';
+        results.forEach((e,i)=>cr.appendChild(mkCard(e,i)));
+        document.getElementById('prog-box').style.display='block';
+        updateCounters();
+      }
+    }
+    // Escuta mudanças em tempo real
+    fs.onSnapshot(fs.doc(db,'prospeccao','dados'), snap => {
+      if(snap.exists() && snap.metadata.hasPendingWrites === false) {
+        document.getElementById('sync-status').textContent = '☁️ Sincronizado';
+        document.getElementById('sync-status').className = 'sync-status ok';
+      }
+    });
+  } catch(e) {
+    console.error('Firebase load error:', e);
+    document.getElementById('sync-status').textContent = '⚠️ Erro ao carregar';
+  }
+}
+
+async function salvarFirebase() {
+  if(!db || !fs) { salvarLocal(); return; }
+  document.getElementById('sync-status').textContent = '💾 Salvando...';
+  document.getElementById('sync-status').className = 'sync-status saving';
+  try {
+    await fs.setDoc(fs.doc(db,'prospeccao','dados'), {
+      results, saved, statuses, notas, ultimoContato, followUp,
+      updatedAt: new Date().toISOString()
+    });
+    document.getElementById('sync-status').textContent = '☁️ Salvo na nuvem ✓';
+    document.getElementById('sync-status').className = 'sync-status ok';
+  } catch(e) {
+    console.error('Firebase save error:', e);
+    salvarLocal();
+    document.getElementById('sync-status').textContent = '💾 Salvo localmente';
+  }
+}
+
+// Debounce para não salvar a cada tecla
+function salvarDados() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(salvarFirebase, 1200);
+}
+
+// Fallback local
+function salvarLocal() {
+  try { localStorage.setItem('protech_v3', JSON.stringify({results,saved,statuses,notas,ultimoContato,followUp})); } catch(e){}
+}
+
+// ===== HASH ID =====
+function hid(str){let h=0;for(let c of str){h=(h<<5)-h+c.charCodeAt(0);h|=0}return 'c'+(h>>>0)}
+
+// ===== TABS =====
+function tab(id,el){
+  curTab=id;
+  ['todos','contato','errado','reuniao','visita','salvas'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===id?'block':'none';
+  });
+  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(id!=='todos') renderTab(id);
+}
+
+function renderTab(status){
+  const list=status==='salvas'?saved:results.filter(e=>(statuses[e.nome]||'none')===status);
+  const c=document.getElementById('cards-'+status);
+  c.innerHTML='';
+  const labels={contato:'Nenhum contato feito ainda',errado:'Nenhum contato errado',reuniao:'Nenhuma reunião agendada',visita:'Nenhuma visita realizada',salvas:'Nenhuma empresa salva'};
+  if(!list.length){c.innerHTML=`<div class="empty"><div class="ei">📋</div><div class="et">Lista vazia</div>${labels[status]||''}</div>`;return;}
+  list.forEach((e,i)=>c.appendChild(mkCard(e,i)));
+}
+
+// ===== BUSCAR =====
+async function buscar(){
+  const seg=document.getElementById('seg').value;
+  const estado=document.getElementById('estado').value;
+  const porte=document.getElementById('porte').value;
+  const qtd=parseInt(document.getElementById('qtd').value);
+  const kw=document.getElementById('kw').value;
+  const btn=document.getElementById('btn-buscar');
+
+  document.getElementById('empty-state').style.display='none';
+  document.getElementById('cards-todos').style.display='none';
+  document.getElementById('loading-state').style.display='block';
+  btn.disabled=true;
+
+  let li=0;
+  const iv=setInterval(()=>{document.getElementById('lmsg').textContent=loadMsgs[li++%loadMsgs.length];},1300);
+
+  const maxTok=qtd<=10?3000:qtd<=20?5000:qtd<=30?7000:9000;
+  const isCoopAssoc=seg.includes('cooperativa')||seg.includes('associa');
+  const extraInstr=isCoopAssoc?`\nATENÇÃO: Para cooperativas/associações de proteção veicular, inclua entidades como ASPEC, ASPE, APCEMG, Protege, Unidas, Ademig, e cooperativas regionais. Se não houver ${qtd} no estado, complete com entidades de estados vizinhos.`:'';
+
+  const prompt=`Você é especialista em prospecção B2B no Brasil.
+
+Liste EXATAMENTE ${qtd} empresas REAIS do segmento "${seg}" no estado/região "${estado}", porte "${porte}".${kw?' Foco: '+kw:''}${extraInstr}
+
+REGRAS:
+- Empresas verificáveis no Google — que existam de fato
+- Varie as cidades para cobrir melhor o estado
+- Se não tiver ${qtd} no estado, adicione de estados próximos para completar
+- O campo maps deve ser: https://www.google.com/maps/search/NOME+CIDADE
+
+Campos de cada empresa: nome, segmento, cidade, estado(sigla), porte(Pequeno/Médio/Grande), telefone, email, site, descricao(até 10 palavras), contatoIdeal, maps(URL Google Maps)
+
+Responda SOMENTE JSON sem markdown:
+{"empresas":[{"nome":"","segmento":"","cidade":"","estado":"","porte":"","telefone":"","email":"","site":"","descricao":"","contatoIdeal":"","maps":""}]}`;
+
+  try {
+    const res=await fetch(API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTok,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
+    let parsed={empresas:[]};
+    try{ parsed=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e1){ try{ const m=raw.match(/\{[\s\S]*\}/); if(m) parsed=JSON.parse(m[0]); }
+    catch(e2){ try{ const m2=raw.match(/\[[\s\S]*\]/); if(m2) parsed={empresas:JSON.parse(m2[0])}; }
+    catch(e3){console.error('Parse falhou:',raw.substring(0,300));} } }
+
+    // Adiciona novas empresas sem apagar as existentes
+    const nomesExistentes = results.map(r=>r.nome);
+    const novas = (parsed.empresas||[]).filter(e=>!nomesExistentes.includes(e.nome));
+    results = [...results, ...novas];
+
+    clearInterval(iv);
+    document.getElementById('loading-state').style.display='none';
+    const cr=document.getElementById('cards-todos');
+    cr.style.display='flex'; cr.innerHTML='';
+    if(!results.length){
+      cr.innerHTML='<div class="empty"><div class="ei">🔍</div><div class="et">Nenhuma empresa encontrada</div>Tente usar "Todo o Brasil".</div>';
+    } else {
+      results.forEach((e,i)=>cr.appendChild(mkCard(e,i)));
+      document.getElementById('prog-box').style.display='block';
+    }
+    updateCounters();
+    salvarDados();
+  } catch(e){
+    clearInterval(iv);
+    document.getElementById('loading-state').style.display='none';
+    const cr=document.getElementById('cards-todos');
+    cr.style.display='flex';
+    cr.innerHTML=`<div class="empty"><div class="ei">⚠️</div><div class="et">Erro ao buscar</div><small style="color:#f08080">${e.message}</small></div>`;
+  }
+  btn.disabled=false;
+}
+
+// ===== CARD =====
+function mkCard(emp,i){
+  const id=hid(emp.nome);
+  const init=emp.nome.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+  const isSaved=saved.some(s=>s.nome===emp.nome);
+  const status=statuses[emp.nome]||'none';
+  const nota=notas[emp.nome]||'';
+  const uc=ultimoContato[emp.nome]||'';
+  const fu=followUp[emp.nome]||'';
+  const telNum=(emp.telefone||'').replace(/\D/g,'');
+  const mapsUrl=emp.maps||`https://www.google.com/maps/search/${encodeURIComponent((emp.nome||'')+' '+(emp.cidade||''))}`;
+  const fuVencido=fu&&new Date(fu.split('/').reverse().join('-'))<new Date();
+
+  const d=document.createElement('div');
+  d.className=`cc${status!=='none'?' st-'+status:''}`;
+  d.id=id;
+  d.style.animationDelay=(i*.04)+'s';
+
+  d.innerHTML=`
+    <div class="cc-top">
+      <div class="av">${init}</div>
+      <div style="flex:1;min-width:0">
+        <div class="cc-name">${emp.nome}</div>
+        <span class="cc-seg">${emp.segmento}</span>
+      </div>
+      <button class="star-btn ${isSaved?'on':''}" onclick="toggleSave('${emp.nome.replace(/'/g,"\\'")}',this)">★</button>
+    </div>
+    <div class="cc-info">
+      <span class="ci">📍 ${emp.cidade}, ${emp.estado}</span>
+      <span class="ci">🏢 ${emp.porte}</span>
+      <span class="ci">👤 ${emp.contatoIdeal}</span>
+      <span class="ci"><a href="${mapsUrl}" target="_blank">🗺️ Ver no Maps</a></span>
+      ${emp.site?`<span class="ci"><a href="${emp.site.startsWith('http')?emp.site:'https://'+emp.site}" target="_blank">🌐 Site</a></span>`:''}
+    </div>
+    <div class="cc-info" style="margin-bottom:6px" id="inf-${id}">
+      ${emp.telefone?`<span class="ci">📞 ${emp.telefone} <button class="ba" style="padding:1px 5px;font-size:9px" onclick="editarCampo('${emp.nome.replace(/'/g,"\\'")}','tel')">✏️</button></span>`:''}
+      ${emp.email?`<span class="ci">✉️ ${emp.email} <button class="ba" style="padding:1px 5px;font-size:9px" onclick="editarCampo('${emp.nome.replace(/'/g,"\\'")}','email')">✏️</button></span>`:''}
+    </div>
+    <div id="edit-${id}" style="display:none"></div>
+    <div class="cc-desc">${emp.descricao}</div>
+    <textarea class="nota-area" placeholder="📝 Anote: nome do contato, o que foi conversado, próximo passo..." onblur="salvarNota('${emp.nome.replace(/'/g,"\\'")}',this.value)">${nota}</textarea>
+    <div class="nota-meta">
+      <span>🕐 ${uc?'Último contato: '+uc:'Sem contato ainda'}</span>
+      ${fu
+        ?`<span class="follow-badge ${fuVencido?'':'ok'}" onclick="editarFollowUp('${emp.nome.replace(/'/g,"\\'")}')">🔔 Follow-up: ${fu}${fuVencido?' ⚠️':''}</span>`
+        :`<span style="cursor:pointer;color:var(--muted);font-size:10px" onclick="editarFollowUp('${emp.nome.replace(/'/g,"\\'")}')">+ follow-up</span>`
+      }
+    </div>
+    <div class="acts">
+      ${telNum.length>=10?`<button class="ba bw" onclick="abrirWpp('${telNum}','${emp.nome.replace(/'/g,"\\'")}')">💬 WhatsApp</button>`:''}
+      ${emp.email?`<button class="ba be" onclick="abrirEmail('${emp.email}','${emp.nome.replace(/'/g,"\\'")}')">✉️ E-mail</button>`:''}
+      <button class="ba bg" onclick="window.open('${mapsUrl}','_blank')">🗺️ Maps</button>
+      <button class="ba bm" onclick='abrirModal(${safeJson(emp)})'>✨ Mensagens</button>
+      <select class="status-sel" onchange="setStatus('${emp.nome.replace(/'/g,"\\'")}',this.value)" title="Status">
+        <option value="none" ${status==='none'?'selected':''}>— status</option>
+        <option value="contato" ${status==='contato'?'selected':''}>✅ Contato feito</option>
+        <option value="errado" ${status==='errado'?'selected':''}>❌ Contato errado</option>
+        <option value="reuniao" ${status==='reuniao'?'selected':''}>📅 Reunião agendada</option>
+        <option value="visita" ${status==='visita'?'selected':''}>🤝 Visita realizada</option>
+      </select>
+    </div>`;
+  return d;
+}
+
+function safeJson(emp){return "JSON.parse(decodeURIComponent('"+encodeURIComponent(JSON.stringify(emp))+"'))";}
+
+// ===== ANOTAÇÕES =====
+function salvarNota(nome,val){notas[nome]=val;salvarDados();}
+
+// ===== FOLLOW-UP =====
+function editarFollowUp(nome){
+  const data=prompt('Data do follow-up (ex: 20/05/2026):',followUp[nome]||'');
+  if(data===null)return;
+  followUp[nome]=data;
+  salvarDados();
+  reRenderCard(nome);
+}
+
+// ===== EDITAR CAMPO =====
+function editarCampo(nome,tipo){
+  const emp=results.find(r=>r.nome===nome)||saved.find(r=>r.nome===nome);
+  if(!emp)return;
+  const id=hid(nome);
+  const editDiv=document.getElementById('edit-'+id);
+  if(!editDiv)return;
+  const campo=tipo==='tel'?emp.telefone:emp.email;
+  editDiv.style.display='block';
+  editDiv.innerHTML=`<div class="edit-row"><input class="edit-inp" id="ei-${id}" value="${campo||''}" placeholder="${tipo==='tel'?'Telefone':'E-mail'}"><button class="edit-btn" onclick="salvarCampo('${nome.replace(/'/g,"\\'")}','${tipo}')">✓ Salvar</button><button class="edit-btn" style="background:var(--s3);color:var(--text)" onclick="document.getElementById('edit-${id}').style.display='none'">✕</button></div>`;
+  document.getElementById('ei-'+id).focus();
+}
+
+function salvarCampo(nome,tipo){
+  const emp=results.find(r=>r.nome===nome)||saved.find(r=>r.nome===nome);
+  if(!emp)return;
+  const id=hid(nome);
+  const val=document.getElementById('ei-'+id)?.value||'';
+  if(tipo==='tel') emp.telefone=val; else emp.email=val;
+  salvarDados();
+  reRenderCard(nome);
+}
+
+function reRenderCard(nome){
+  const emp=results.find(r=>r.nome===nome)||saved.find(r=>r.nome===nome);
+  if(!emp)return;
+  const id=hid(nome);
+  const el=document.getElementById(id);
+  if(el){ const idx=results.indexOf(emp); el.replaceWith(mkCard(emp,idx>=0?idx:0)); }
+}
+
+// ===== STATUS =====
+function setStatus(nome,status){
+  statuses[nome]=status;
+  const id=hid(nome);
+  const el=document.getElementById(id);
+  if(el) el.className=`cc${status!=='none'?' st-'+status:''}`;
+  if(['contato','reuniao','visita'].includes(status)){
+    ultimoContato[nome]=new Date().toLocaleDateString('pt-BR');
+  }
+  updateCounters();
+  salvarDados();
+  if(curTab!=='todos') renderTab(curTab);
+}
+
+// ===== SALVAR =====
+function toggleSave(nome,el){
+  const emp=results.find(r=>r.nome===nome);
+  if(!emp)return;
+  const idx=saved.findIndex(s=>s.nome===nome);
+  if(idx>=0){saved.splice(idx,1);el.classList.remove('on');}
+  else{saved.push(emp);el.classList.add('on');}
+  updateCounters();
+  salvarDados();
+}
+
+// ===== CONTADORES =====
+function updateCounters(){
+  const total=results.length;
+  const cnt=(s)=>results.filter(e=>statuses[e.nome]===s).length;
+  const contato=cnt('contato'),errado=cnt('errado'),reuniao=cnt('reuniao'),visita=cnt('visita');
+  document.getElementById('sn-total').textContent=total;
+  document.getElementById('sn-contato').textContent=contato;
+  document.getElementById('sn-reuniao').textContent=reuniao;
+  document.getElementById('sn-visita').textContent=visita;
+  document.getElementById('tb-todos').textContent=total;
+  document.getElementById('tb-contato').textContent=contato;
+  document.getElementById('tb-errado').textContent=errado;
+  document.getElementById('tb-reuniao').textContent=reuniao;
+  document.getElementById('tb-visita').textContent=visita;
+  document.getElementById('tb-salvas').textContent=saved.length;
+  document.getElementById('hstat').textContent=`${total} empresa${total!==1?'s':''}`;
+  if(total>0){
+    const pct=n=>Math.round((n/total)*100);
+    [{k:'contato',n:contato},{k:'reuniao',n:reuniao},{k:'visita',n:visita},{k:'errado',n:errado}].forEach(({k,n})=>{
+      const pf=document.getElementById('pf-'+k);
+      const pv=document.getElementById('pv-'+k);
+      if(pf)pf.style.width=pct(n)+'%';
+      if(pv)pv.textContent=n;
+    });
+  }
+}
+
+// ===== CONTATOS =====
+function abrirWpp(telNum,nome){
+  ultimoContato[nome]=new Date().toLocaleDateString('pt-BR');
+  salvarDados();
+  window.open('https://wa.me/55'+telNum,'_blank');
+}
+
+function abrirEmail(email,nome){
+  ultimoContato[nome]=new Date().toLocaleDateString('pt-BR');
+  salvarDados();
+  const s=encodeURIComponent('Parceria em Regulação de Sinistros — Protech Reguladora');
+  const b=encodeURIComponent('Olá,\n\nMeu nome é [seu nome] e represento a Protech Reguladora.\n\nGostaríamos de apresentar nossas soluções em regulação de sinistros com central 24h e rede de +17.000 câmeras.\n\nAtenciosamente,\n[seu nome]\nProtech Reguladora\n(11) 94800-0730');
+  window.location.href=`mailto:${email}?subject=${s}&body=${b}`;
+}
+
+// ===== MODAL =====
+async function abrirModal(emp){
+  curEmp=emp;msgType='wpp';msgs={wpp:'',email:'',visita:''};
+  document.getElementById('mtit').textContent=emp.nome;
+  document.getElementById('ov').classList.add('open');
+  document.querySelectorAll('.mtab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.getElementById('ma').innerHTML='<div class="loading-box"><span class="spinner"></span> Gerando mensagens personalizadas...</div>';
+
+  const seg=emp.segmento.toLowerCase();
+  const isCoopAssoc=seg.includes('cooperativa')||seg.includes('associa');
+  const isSeg=seg.includes('seguradora');
+  const isCorr=seg.includes('corretora');
+
+  const instrucao=isCoopAssoc
+    ?`Foque que a Protech pode apoiar a regulação dos sinistros dos associados/cooperados com muito mais agilidade e tecnologia. Mencione que a maioria das cooperativas não têm acesso a reguladora especializada com câmeras e plataforma digital.`
+    :isSeg?`Foque na redução do tempo de regulação, mitigação de custos e qualidade técnica. Mencione impacto no índice de sinistralidade.`
+    :isCorr?`Foque no valor para os segurados da corretora no momento do sinistro — diferencial competitivo que a corretora pode oferecer.`
+    :`Foque em como a Protech resolve sinistros com tecnologia e agilidade, beneficiando o segmento de ${emp.segmento}.`;
+
+  const prompt=`Você é especialista em vendas B2B no Brasil. Crie 3 mensagens comerciais de alto impacto.
+
+EMPRESA: ${emp.nome} | ${emp.segmento} | ${emp.cidade}, ${emp.estado}
+DECISOR: ${emp.contatoIdeal}
+O QUE FAZEM: ${emp.descricao}
+
+PROTECH REGULADORA:
+• Central 24h/365 — atende qualquer sinistro a qualquer hora
+• Rede de +17.000 câmeras estratégicas no Brasil
+• Plataforma digital com rastreabilidade total
+• Equipe técnica especializada
+• Cobertura nacional
+
+INSTRUÇÃO: ${instrucao}
+
+1. WHATSAPP: máx 6 linhas, use *negrito*, emoji no início, termine com pergunta aberta. Sem "espero que esteja bem".
+2. EMAIL: assunto impactante (máx 8 palavras) + corpo máx 7 linhas, CTA claro para reunião de 20 minutos.
+3. VISITA: roteiro com 6 tópicos numerados (quebra-gelo, apresentação, identificar dor, diferencial tecnológico, proposta, fechamento).
+
+Responda SOMENTE JSON sem markdown:
+{"wpp":"...","emailAssunto":"...","email":"...","visita":"..."}`;
+
+  try{
+    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1400,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
+    const p=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    msgs.wpp=p.wpp||'';
+    msgs.email=`ASSUNTO: ${p.emailAssunto||'Parceria Protech Reguladora'}\n\n${p.email||''}`;
+    msgs.visita=p.visita||'';
+    showMsg('wpp');
+  }catch(e){
+    document.getElementById('ma').innerHTML=`<div style="color:#f08080;font-size:13px;padding:16px;text-align:center">Erro ao gerar.<br><small>${e.message}</small></div>`;
+  }
+}
+
+function showMsg(t){const txt=msgs[t];document.getElementById('ma').innerHTML=txt?`<div class="msgbox">${txt}</div>`:`<div class="loading-box"><span class="spinner"></span> Gerando...</div>`;}
+function smsg(t,el){msgType=t;document.querySelectorAll('.mtab').forEach(x=>x.classList.remove('active'));el.classList.add('active');showMsg(t);}
+function copiar(){const t=msgs[msgType];if(!t)return;navigator.clipboard.writeText(t).then(()=>{const b=document.querySelector('.bcopy');b.textContent='✓ COPIADO!';setTimeout(()=>{b.textContent='📋 COPIAR MENSAGEM';},2000);});}
+function closeModal(){document.getElementById('ov').classList.remove('open');}
+document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// Init
+initFirebase();
+</script>
+</body>
+</html>
