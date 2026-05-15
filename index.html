@@ -299,7 +299,7 @@ hr.div{border:none;border-top:1px solid var(--border)}
 
 <script>
 const KEY = "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";
- = "/.netlify/functions/claude";
+const API_URL = "https://protech-api.centraldocolaborador-cdc.workers.dev";
 
 let results=[], saved=[], statuses={}, notas={}, ultimoContato={}, followUp={};
 let curEmp=null, msgType='wpp', msgs={wpp:'',email:'',visita:''}, curTab='todos';
@@ -446,7 +446,7 @@ Responda SOMENTE JSON sem markdown:
   try {
     const res=await fetch(API_URL,{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTok,messages:[{role:'user',content:prompt}]})
     });
     const data=await res.json();
@@ -702,7 +702,7 @@ Responda SOMENTE JSON sem markdown:
 {"wpp":"...","emailAssunto":"...","email":"...","visita":"..."}`;
 
   try{
-    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1400,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1400,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
     const p=JSON.parse(raw.replace(/```json|```/g,'').trim());
